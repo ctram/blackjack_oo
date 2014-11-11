@@ -85,7 +85,7 @@ class Game
   def initialize
     self.dealer = Player.new("Dealer")
     self.deck = Deck.new
-    self.deck.cards.shuffle
+    self.deck.cards.shuffle!
   end
 
   # Give player another card from the deck, to add to his hand
@@ -145,6 +145,8 @@ class Game
     begin
       self.user = Player.new(name)
       self.dealer = Player.new("Dealer")
+      self.deck = Deck.new
+      self.deck.cards.shuffle!
 
       # Deal initial cards
       hit(self.user)
