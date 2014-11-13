@@ -1,3 +1,4 @@
+require 'pry'
 
 class Player
   attr_accessor :name, :hand
@@ -34,7 +35,7 @@ class Hand
     }
     sum = 0
     num_aces = 0
-    self.cards.each do |card|
+    cards.each do |card|
       if card.visible != false
         card.value == "Ace" ? num_aces += 1 : nil
         sum += hash_values_to_i[card.value]
@@ -59,6 +60,14 @@ class Card
     self.value = value
     self.visible = true
   end
+
+  def hide
+    self.visible = false
+  end
+
+  def show
+    self.visible = true
+  end
 end
 
 class Deck
@@ -73,7 +82,7 @@ class Deck
     # Creates a deck of 52 cards
     suits.each do |suit|
       values.each do |value|
-        self.cards << Card.new(suit, value)
+        cards << Card.new(suit, value)
       end
     end
   end
@@ -85,7 +94,7 @@ class Game
   def initialize
     self.dealer = Player.new("Dealer")
     self.deck = Deck.new
-    self.deck.cards.shuffle!
+    deck.cards.shuffle!
   end
 
   # Give player another card from the deck, to add to his hand
@@ -95,16 +104,16 @@ class Game
 
   def display_winner
     puts
-    if self.user.hand.bust
+    if user.hand.bust
       puts "#{self.user.name} busts! Dealer wins!"
     else
-      if self.dealer.hand.bust
+      if dealer.hand.bust
         puts "Dealer busts! #{self.user.name} wins!"
       else
-        if self.user.hand.total > self.dealer.hand.total
-          puts "#{self.user.name} wins!"
-        elsif self.user.hand.total == self.dealer.hand.total
-          puts "#It's a push, no one wins."
+        if user.hand.total > self.dealer.hand.total
+          puts "#{user.name} wins!"
+        elsif user.hand.total == dealer.hand.total
+          puts "It's a push, no one wins."
         else
           puts "Dealer wins!"
         end
@@ -115,7 +124,7 @@ class Game
   def display_hands
     system 'clear'
     puts "Dealer's hand:"
-    self.dealer.hand.cards.each do |card|
+    dealer.hand.cards.each do |card|
       if card.visible
         print "#{card.value}_#{card.suit}"
         print "  "
@@ -124,16 +133,16 @@ class Game
       end
     end
     puts
-    puts "Total showing: " + self.dealer.hand.total.to_s
+    puts "Total showing: " + dealer.hand.total.to_s
 
     puts
-    puts "#{self.user.name}'s hand:"
-    self.user.hand.cards.each do |card|
+    puts "#{user.name}'s hand:"
+    user.hand.cards.each do |card|
       print "#{card.value}_#{card.suit}"
       print "  "
     end
     puts
-    puts "Total: " + self.user.hand.total.to_s
+    puts "Total: " + user.hand.total.to_s
   end
 
   def run
@@ -143,18 +152,19 @@ class Game
     name = gets.chomp.capitalize
 
     begin
-      self.user = Player.new(name)
+      self.user = Player.new(name) # XXX: changed this , removed self.
       self.dealer = Player.new("Dealer")
       self.deck = Deck.new
-      self.deck.cards.shuffle!
+      deck.cards.shuffle!
 
       # Deal initial cards
-      hit(self.user)
-      hit(self.dealer)
-      hit(self.user)
-      hit(self.dealer)
+      hit(user)
+      hit(dealer)
+      hit(user)
+      hit(dealer)
 
-      self.dealer.hand.cards[1].visible = false   # Last card is not visible to the user until user stays
+      dealer.hand.cards[1].hide   # Last card is not visible to the user until user stays
+      ##binding.pry
 
       display_hands()
 
@@ -172,26 +182,26 @@ class Game
         when "h"
           hit(user)
           display_hands()
-          self.user.hand.total > 21 ? self.user.hand.bust = true : nil
-          self.user.hand.bust ? break : nil
+          user.hand.total > 21 ? self.user.hand.bust = true : nil
+          user.hand.bust ? break : nil
         when "s"
           break
         end
       end
 
       # Check whether user bust before going onto comp part
-      self.user.hand.total > 21 ? self.user.hand.bust = true : nil
+      user.hand.total > 21 ? user.hand.bust = true : nil
 
       # Dealer's part
-      if !self.user.hand.bust
-        self.dealer.hand.cards[1].visible = true  # Now show the previously hidden card.
-        until self.dealer.hand.total >= 17
-          hit(self.dealer)
+      if !user.hand.bust
+        dealer.hand.cards[1].show  # Now show the previously hidden card.
+        until dealer.hand.total >= 17
+          hit(dealer)
         end
         display_hands()
       end
 
-      self.dealer.hand.total > 21 ? self.dealer.hand.bust = true : nil
+      dealer.hand.total > 21 ? dealer.hand.bust = true : nil
 
       display_winner()
 
@@ -205,3 +215,6 @@ class Game
 end
 game = Game.new
 game.run
+
+#     line 157, you're reaching into implementation again. I'd much rather this be a method that unhides a card. You want to let objects expose interfaces to call, not modify its implementation directly from the outside. This way, you're buffered from implementation changes, which happen all the time. Suppose cards is no longer an array, for example. You don't want to change the external interfaces: the methods will still be deal or hide or whatever... but the implementation of how the cards is implemented can be modified.
+#
