@@ -1,4 +1,3 @@
-require 'pry'
 
 class Player
   attr_accessor :name, :hand
@@ -164,7 +163,7 @@ class Game
       hit(dealer)
 
       dealer.hand.cards[1].hide   # Last card is not visible to the user until user stays
-      ##binding.pry
+      ##
 
       display_hands()
 
